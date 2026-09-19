@@ -9,6 +9,13 @@ export interface City {
   admin1?: string;
 }
 
+export interface DailyForecast {
+  date: string;
+  tempMax: number;
+  tempMin: number;
+  weatherCode: number;
+}
+
 export interface Config {
   cities: City[];
   defaultCityId: number | null;

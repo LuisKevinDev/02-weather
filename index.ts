@@ -1,6 +1,6 @@
-import { geocodeCity, getWeather } from "./src/api.ts";
+import { geocodeCity, getForecast, getWeather } from "./src/api.ts";
 import { loadConfig, saveConfig } from "./src/storage.ts";
-import { chooseCity, cityLabel, createPrompt, printMenu, unitSymbol } from "./src/ui.ts";
+import { chooseCity, cityLabel, createPrompt, printForecast, printMenu, unitSymbol } from "./src/ui.ts";
 import { green, red, yellow } from "./src/colors.ts";
 import type { Config } from "./src/types.ts";
 import type { Prompt } from "./src/ui.ts";
@@ -32,6 +32,27 @@ async function showAllWeather(config: Config): Promise<void> {
       console.log(red(`  ${index + 1}. ${cityLabel(city)}: no se pudo obtener el clima`));
     }
   });
+}
+
+async function showForecast(rl: Prompt, config: Config): Promise<void> {
+  if (config.cities.length === 0) {
+    console.log(red("  No hay ciudades guardadas. Agrega una con la opción 3."));
+    return;
+  }
+  const index = await chooseCity(
+    rl,
+    config.cities,
+    config.defaultCityId,
+    "  Número de la ciudad (Enter para cancelar): "
+  );
+  if (index === null) {
+    console.log("  Cancelado.");
+    return;
+  }
+  const city = config.cities[index];
+  if (!city) return;
+  const forecast = await getForecast(city.latitude, city.longitude, config.unit);
+  printForecast(city, forecast, config.unit);
 }
 
 async function searchAndAddCity(rl: Prompt, config: Config): Promise<void> {
@@ -139,6 +160,9 @@ async function main(): Promise<void> {
           break;
         case "5":
           await setDefaultCity(rl, config);
+          break;
+        case "6":
+          await showForecast(rl, config);
           break;
         case "8":
           toggleUnit(config);

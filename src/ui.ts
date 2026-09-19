@@ -1,5 +1,5 @@
-import { cyan, red } from "./colors.ts";
-import type { City, Unit } from "./types.ts";
+import { cyan, red, yellow } from "./colors.ts";
+import type { City, DailyForecast, Unit } from "./types.ts";
 
 const MENU_WIDTH = 40;
 const BAR = cyan("═".repeat(MENU_WIDTH));
@@ -94,6 +94,7 @@ export function printMenu(cityCount: number, unit: Unit): void {
   console.log(cyan("  3. Buscar y agregar ciudad"));
   console.log(cyan("  4. Eliminar ciudad"));
   console.log(cyan("  5. Establecer ciudad default"));
+  console.log(cyan("  6. Pronóstico 7 días"));
   console.log(cyan(`  8. Ajustes (${unitSymbol(unit)})`));
   console.log(cyan("  9. Salir"));
   console.log(BAR);
@@ -122,4 +123,54 @@ export async function chooseCity(
     }
     console.log(red("  Número no válido. Intenta de nuevo (o Enter para cancelar)."));
   }
+}
+
+const WEATHER_CODES: Record<number, string> = {
+  0: "Despejado",
+  1: "Mayormente despejado",
+  2: "Parcialmente nublado",
+  3: "Nublado",
+  45: "Niebla",
+  48: "Niebla con escarcha",
+  51: "Llovizna ligera",
+  53: "Llovizna",
+  55: "Llovizna intensa",
+  56: "Llovizna helada",
+  57: "Llovizna helada intensa",
+  61: "Lluvia ligera",
+  63: "Lluvia",
+  65: "Lluvia intensa",
+  66: "Lluvia helada",
+  67: "Lluvia helada intensa",
+  71: "Nieve ligera",
+  73: "Nieve",
+  75: "Nieve intensa",
+  77: "Granos de nieve",
+  80: "Chubascos ligeros",
+  81: "Chubascos",
+  82: "Chubascos intensos",
+  85: "Chubascos de nieve",
+  86: "Chubascos de nieve intensos",
+  95: "Tormenta",
+  96: "Tormenta con granizo",
+  99: "Tormenta con granizo intensa",
+};
+
+export function printForecast(city: City, forecast: DailyForecast[], unit: Unit): void {
+  const symbol = unitSymbol(unit);
+  console.log(`  ${cityLabel(city)} — próximos 7 días:`);
+  const weekdayFormat = new Intl.DateTimeFormat("es", { weekday: "long" });
+  const dateFormat = new Intl.DateTimeFormat("es", { day: "2-digit", month: "2-digit" });
+  forecast.forEach((day) => {
+    const parsed = new Date(`${day.date}T00:00:00`);
+    if (Number.isNaN(parsed.getTime())) {
+      console.log(`  ${day.date}: ${yellow(`${day.tempMax}°`)} / ${day.tempMin}° ${symbol} — ${WEATHER_CODES[day.weatherCode] ?? "Desconocido"}`);
+      return;
+    }
+    const weekday = weekdayFormat.format(parsed);
+    const date = dateFormat.format(parsed);
+    console.log(
+      `  ${weekday} ${date}: ${yellow(`${day.tempMax}°`)} / ${day.tempMin}° ${symbol} — ${WEATHER_CODES[day.weatherCode] ?? "Desconocido"}`
+    );
+  });
 }
